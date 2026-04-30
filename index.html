@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiwi Prophet - Phase 3: The Evolution</title>
+    <title>Kiwi Prophet - Admin & Evolution</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,6 +12,7 @@
             --accent: #a3cf62;
             --text: #ffffff;
             --danger: #ff4d4d;
+            --admin-color: #ff9f43;
         }
 
         body.bullish { --bg-color: #0a1a0f; --accent: #00ff88; }
@@ -20,60 +21,41 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
         body { background-color: var(--bg-color); color: var(--text); transition: 0.8s; min-height: 100vh; }
 
-        /* Auth Layer */
         #auth-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
         .hidden { display: none !important; }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; display: none; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; display: none; }
 
-        /* Layout */
-        .main-layout { display: grid; grid-template-columns: 300px 1fr 300px; gap: 1.5rem; }
-        .panel { background: var(--card-bg); border-radius: 20px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.1); }
+        .main-layout { display: grid; grid-template-columns: 320px 1fr 320px; gap: 1.5rem; }
+        .panel { background: var(--card-bg); border-radius: 20px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.1); position: relative; }
         
-        .bird-display { text-align: center; }
-        .bird-emoji { font-size: 6rem; filter: drop-shadow(0 0 15px var(--accent)); animation: float 3s infinite ease-in-out; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-
-        .hp-bar-bg { background: #333; height: 12px; border-radius: 6px; margin: 10px 0; overflow: hidden; }
-        #hp-fill { background: var(--accent); height: 100%; width: 100%; transition: 0.5s; }
-
-        /* Buttons */
         .btn-action {
             width: 100%; padding: 12px; border-radius: 12px; border: none; margin-top: 10px;
             font-weight: bold; cursor: pointer; transition: 0.2s;
         }
-        .btn-harvest { background: var(--accent); color: #000; font-size: 1.2rem; height: 80px; }
+        .btn-harvest { background: var(--accent); color: #000; font-size: 1.2rem; height: 70px; }
         .btn-upgrade { background: #ffd700; color: #000; }
-        .btn-heal { background: #4d94ff; color: #fff; }
-        .btn-claim { background: #ff00ff; color: #fff; border: 2px solid white; }
 
-        .log-box { font-size: 0.8rem; height: 150px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin-top: 10px; }
-        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #222; padding-bottom: 2px; }
+        .wallet-card { background: linear-gradient(45deg, #111, #222); padding: 15px; border-radius: 15px; border: 1px solid var(--accent); margin-bottom: 15px; }
 
-        .price-ticker { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+        /* Admin Styles */
+        .admin-panel { border-color: var(--admin-color) !important; background: rgba(255, 159, 67, 0.05); }
+        .admin-badge { background: var(--admin-color); color: #000; padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; float: right; }
+        .req-card { background: #000; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.8rem; border: 1px solid #333; }
+        .req-btn { padding: 4px 8px; cursor: pointer; background: var(--accent); border: none; border-radius: 4px; font-weight: bold; margin-top: 5px; }
 
-        .monster-warning { 
-            background: rgba(255, 77, 77, 0.2); border: 1px solid var(--danger); 
-            padding: 10px; border-radius: 10px; text-align: center; color: var(--danger);
-            animation: blink 1s infinite; margin-bottom: 1rem;
-        }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        /* Wallet System UI */
-        .wallet-card { background: linear-gradient(45deg, #111, #222); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid var(--accent); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .history-table { width: 100%; font-size: 0.7rem; margin-top: 10px; border-collapse: collapse; }
-        .history-table td { padding: 5px; border-bottom: 1px solid #333; }
-        
-        /* Modal System */
         .modal {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #1a1a1a; padding: 25px; border-radius: 20px; border: 2px solid var(--accent);
-            z-index: 2000; width: 90%; max-width: 400px; box-shadow: 0 0 30px rgba(0,0,0,1);
+            z-index: 2000; width: 90%; max-width: 400px;
         }
-        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1999; backdrop-filter: blur(5px); }
+        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1999; }
+        
+        .log-box { font-size: 0.8rem; height: 130px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin-top: 10px; }
+        .price-ticker { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -81,19 +63,10 @@
     <div id="auth-overlay">
         <div style="text-align: center; background: #1a1a1a; padding: 3rem; border-radius: 30px; border: 2px solid var(--accent); width: 350px;">
             <div style="font-size: 4rem;">🐦</div>
-            <h1 style="color: var(--accent); letter-spacing: 2px;">KIWI PROPHET</h1>
-            <p style="font-size: 0.8rem; color: #666; margin-bottom: 20px;">Secure Access Phase 3</p>
-            
-            <input type="text" id="addr" placeholder="Polygon Address (0x...)" 
-                style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #333; background:#000; color:#fff;">
-            
-            <input type="password" id="pass" placeholder="Password" 
-                style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #333; background:#000; color:#fff;">
-            
-            <button onclick="login()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:10px; font-weight:bold; cursor:pointer; color:#000;">
-                ENTER BATTLEFIELD
-            </button>
-            <p style="font-size: 0.65rem; color: #555; margin-top: 15px;">*หากเข้าครั้งแรก รหัสจะถูกบันทึกเป็นรหัสผ่านใหม่ทันที</p>
+            <h1 style="color: var(--accent)">KIWI PROPHET</h1>
+            <input type="text" id="addr" placeholder="Polygon Address" style="width:100%; padding:12px; margin:10px 0; border-radius:10px; border:none; background:#000; color:#fff;">
+            <input type="password" id="pass" placeholder="Password" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:none; background:#000; color:#fff;">
+            <button onclick="login()" style="width:100%; padding:12px; background:var(--accent); border:none; border-radius:10px; font-weight:bold; cursor:pointer;">START GAME</button>
         </div>
     </div>
 
@@ -101,328 +74,308 @@
         <div class="overlay" onclick="closeModal()"></div>
         <div class="modal">
             <h3>ฝาก K-TOKEN</h3>
-            <p style="font-size: 0.8rem; color: var(--accent); margin: 10px 0;">โอน K-Token มายัง Address นี้:</p>
-            <code style="display:block; background:#000; padding:10px; font-size:0.7rem; word-break:break-all; border-radius: 5px; color: #00ff88;" id="target-addr">0x242cb010f78cc714cbe8f3e344f24d87486eb268</code>
-            <button onclick="copyAddr()" style="font-size:0.7rem; margin-top:8px; padding: 5px 10px; cursor: pointer;">Copy Address</button>
-            <hr style="margin:20px 0; opacity:0.1;">
-            <label style="font-size: 0.8rem; display: block; margin-bottom: 5px;">จำนวนที่จะฝาก:</label>
-            <input type="number" id="dep-amount" placeholder="0.00" style="width:100%; padding:10px; margin-bottom:15px; background: #000; border: 1px solid #444; color: #fff;">
-            <label style="font-size: 0.8rem; display: block; margin-bottom: 5px;">Transaction Hash (TxID):</label>
-            <input type="text" id="dep-tx" placeholder="0x..." style="width:100%; padding:10px; margin-bottom:15px; background: #000; border: 1px solid #444; color: #fff;">
-            <button class="btn-action" style="background:var(--accent); color:#000;" onclick="submitDeposit()">แจ้งยืนยันการโอน</button>
+            <p style="font-size: 0.8rem; color: #888; margin: 10px 0;">โอนไปที่: <code id="target-addr" style="color:var(--accent)">0x242cb010f78cc714cbe8f3e344f24d87486eb268</code></p>
+            <input type="number" id="dep-amount" placeholder="จำนวน K" style="width:100%; padding:10px; margin-bottom:10px; background:#000; border:1px solid #333; color:#fff;">
+            <input type="text" id="dep-tx" placeholder="Transaction Hash" style="width:100%; padding:10px; margin-bottom:10px; background:#000; border:1px solid #333; color:#fff;">
+            <button class="btn-action" style="background:var(--accent); color:#000;" onclick="submitDeposit()">แจ้งยืนยัน</button>
         </div>
     </div>
 
     <div class="container" id="game-ui">
-        <div class="price-ticker">
-            K-TOKEN: <span id="price-val">$0.000000</span> (<span id="price-chg">0%</span>)
-        </div>
-
-        <div id="monster-alert" class="monster-warning hidden">⚠️ FUD MONSTERS ATTACKING DUE TO BEAR MARKET!</div>
+        <div class="price-ticker">K-TOKEN: <span id="price-val">$0.000000</span> (<span id="price-chg">0%</span>)</div>
 
         <div class="main-layout">
             <div class="panel">
                 <div class="wallet-card">
-                    <p style="font-size: 0.75rem; color: #888;">IN-GAME BALANCE</p>
-                    <h2 id="k-balance" style="color: var(--accent); font-size: 1.8rem;">0.00 K</h2>
-                    <div style="display: flex; gap: 8px; margin-top: 10px;">
-                        <button onclick="openDeposit()" style="flex:1; font-size:0.75rem; padding:8px; border-radius:8px; cursor:pointer;">DEPOSIT</button>
-                        <button onclick="withdraw()" style="flex:1; font-size:0.75rem; padding:8px; border-radius:8px; cursor:pointer;">WITHDRAW</button>
+                    <p style="font-size: 0.7rem; color: #888;">BALANCE</p>
+                    <h2 id="k-balance" style="color: var(--accent);">0.00 K</h2>
+                    <div style="display: flex; gap: 5px; margin-top: 10px;">
+                        <button onclick="openDeposit()" style="flex:1; cursor:pointer;">DEPOSIT</button>
+                        <button onclick="withdraw()" style="flex:1; cursor:pointer;">WITHDRAW</button>
                     </div>
                 </div>
 
-                <h3>GUARDIAN STATS</h3>
-                <div class="bird-display">
-                    <div class="bird-emoji" id="bird-icon">🐦</div>
+                <h3>GUARDIAN <span id="admin-tag" class="admin-badge hidden">ADMIN</span></h3>
+                <div style="text-align: center;">
+                    <div class="bird-emoji" style="font-size: 5rem;">🐦</div>
                     <h2 id="bird-lvl">LVL: 1</h2>
                 </div>
-                <div class="hp-bar-bg"><div id="hp-fill"></div></div>
-                <p id="hp-text" style="text-align: center;">HP: 100/100</p>
-                <div style="display:flex; justify-content: space-around; margin: 10px 0; font-size: 0.9rem; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 10px;">
-                    <span>Pow: <b id="stat-power" style="color: var(--accent)">10</b></span>
-                    <span>Def: <b id="stat-def" style="color: #4d94ff">5</b></span>
+                <div class="hp-bar-bg" style="background:#333; height:10px; border-radius:5px; overflow:hidden; margin:10px 0;">
+                    <div id="hp-fill" style="background:var(--accent); height:100%; width:100%;"></div>
                 </div>
-                <button class="btn-action btn-upgrade" onclick="upgrade()">UPGRADE (50 Energy)</button>
+                <p id="hp-text" style="font-size: 0.8rem; text-align:center;">HP: 100/100</p>
                 
-                <div id="daily-reward-zone" style="margin-top: 15px;">
-                    <button class="btn-action btn-claim hidden" id="claim-btn" onclick="claimDaily()">🎁 CLAIM DAILY REWARD</button>
-                </div>
+                <button class="btn-action btn-upgrade" onclick="upgrade()">UPGRADE (50 Energy)</button>
+                <button class="btn-action btn-claim hidden" id="claim-btn" style="background:#ff00ff; color:#fff" onclick="claimDaily()">🎁 CLAIM DAILY</button>
             </div>
 
-            <div class="panel" style="display: flex; flex-direction: column; justify-content: center;">
-                <h1 style="text-align: center; color: var(--accent); font-size: 4rem; line-height: 1; text-shadow: 0 0 20px var(--accent);" id="energy-val">0.00</h1>
-                <p style="text-align: center; margin-bottom: 2rem; letter-spacing: 4px; color: #888; font-weight: bold;">K-ENERGY</p>
+            <div class="panel" style="text-align: center;">
+                <h1 style="color: var(--accent); font-size: 4rem;" id="energy-val">0.00</h1>
+                <p style="color: #666; font-weight: bold; margin-bottom: 2rem;">K-ENERGY</p>
+                <button class="btn-action btn-harvest" onclick="harvest()">HARVEST</button>
+                <button class="btn-action btn-heal" style="background:#4d94ff; color:#fff" onclick="heal()">HEAL (10 Energy)</button>
                 
-                <button class="btn-action btn-harvest" onclick="harvest()">HARVEST ENERGY</button>
-                <button class="btn-action btn-heal" onclick="heal()">HEAL HP (10 Energy)</button>
-                
-                <div style="margin-top: 2rem; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 15px;">
-                    <h3 style="margin-bottom: 10px;">K-TOKEN SHOP</h3>
-                    <button class="btn-action" style="background: #fff; color: #000;" onclick="buySuperShield()">BUY SUPER SHIELD (10 K)</button>
-                    <p style="font-size: 0.7rem; color: #666; margin-top: 8px; text-align: center;">+10 DEF & Full HP Recovery</p>
+                <div style="margin-top: 2rem; border-top: 1px solid #333; padding-top: 1.5rem;">
+                    <h3>K-SHOP</h3>
+                    <button class="btn-action" style="background:#fff; color:#000" onclick="buySuperShield()">SUPER SHIELD (10 K)</button>
                 </div>
             </div>
 
             <div class="panel">
-                <h3>WORLD LOG</h3>
-                <div class="log-box" id="game-log"></div>
-                
-                <h3 style="margin-top: 1.5rem;">HISTORY</h3>
-                <div class="log-box" style="height: 140px;">
-                    <table class="history-table" id="history-list"></table>
+                <div id="admin-section" class="hidden">
+                    <h3 style="color: var(--admin-color)">ADMIN CONTROL</h3>
+                    <div class="log-box" id="admin-requests" style="height: 250px; background: rgba(0,0,0,0.5);">
+                        <p style="color:#555; text-align:center;">No pending requests</p>
+                    </div>
                 </div>
-                
-                <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                    <h3 style="font-size: 0.9rem;">WORLD STATE</h3>
-                    <p id="world-state" style="font-size: 1.1rem; font-weight: bold;">Neutral</p>
-                    <p style="font-size: 0.75rem; color: #555; margin-top: 10px;">Market state affects energy production and guardian health.</p>
+
+                <div id="user-section">
+                    <h3>WORLD LOG</h3>
+                    <div class="log-box" id="game-log"></div>
+                    <h3 style="margin-top: 1rem;">MY HISTORY</h3>
+                    <div class="log-box" id="user-history" style="height: 150px;"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        const ADMIN_ADDR = "0x242cb010f78cc714cbe8f3e344f24d87486eb268";
         const K_TOKEN_ADDR = "0x465C4eACE8eF06A4308db2e6CcE5D6f99BbB21dc";
-        const ADMIN_WALLET = "0x242cb010f78cc714cbe8f3e344f24d87486eb268";
         
-        let player = { 
-            addr: "", pass: "", energy: 0, hp: 100, lvl: 1, pwr: 10, def: 5, 
-            kBalance: 0, lastClaim: 0, history: [] 
-        };
-        let market = { change: 0, state: "neutral" };
-
-        // --- Audio System (Web Audio API) ---
+        let player = { addr: "", pass: "", energy: 0, hp: 100, lvl: 1, pwr: 10, def: 5, kBalance: 0, lastClaim: 0, history: [] };
+        let market = { state: "neutral" };
+        
+        // --- Core Audio ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(freq, type, duration) {
+        function playSound(freq, duration) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
 
-        // --- Auth System ---
         function login() {
-            const inputAddr = document.getElementById('addr').value.trim().toLowerCase();
-            const inputPass = document.getElementById('pass').value.trim();
+            const addrInput = document.getElementById('addr').value.trim().toLowerCase();
+            const passInput = document.getElementById('pass').value.trim();
+            if(addrInput.length < 10) return alert("Invalid Address");
 
-            if(inputAddr.length < 10 || inputPass.length < 4) {
-                return alert("กรุณาใส่ Address และ Password (อย่างน้อย 4 ตัวอักษร)");
-            }
-            
-            const savedData = localStorage.getItem('kiwi_p3_v2_' + inputAddr);
-            
-            if(savedData) {
-                const parsed = JSON.parse(savedData);
-                if(parsed.pass !== inputPass) {
-                    return alert("รหัสผ่านไม่ถูกต้องสำหรับ Address นี้!");
-                }
-                player = parsed;
+            const saved = localStorage.getItem('kiwi_p3_db_' + addrInput);
+            if(saved) {
+                const data = JSON.parse(saved);
+                if(data.pass !== passInput) return alert("Wrong Password");
+                player = data;
             } else {
-                // New User Setup
-                player.addr = inputAddr;
-                player.pass = inputPass;
-                addLog("ยินดีต้อนรับ Guardian ใหม่! รหัสผ่านคุณถูกบันทึกแล้ว");
+                player.addr = addrInput;
+                player.pass = passInput;
             }
 
             document.getElementById('auth-overlay').classList.add('hidden');
             document.getElementById('game-ui').style.display = 'block';
             
-            playSound(440, 'sine', 0.5);
+            if(player.addr === ADMIN_ADDR) {
+                document.getElementById('admin-section').classList.remove('hidden');
+                document.getElementById('admin-tag').classList.remove('hidden');
+            }
+
             updateUI();
             startPriceOracle();
-            startGameLoop();
-            checkDailyReward();
+            setInterval(gameTick, 10000);
+            renderAdminPanel();
         }
 
-        async function startPriceOracle() {
-            const updatePrice = async () => {
+        function startPriceOracle() {
+            const fetchPrice = async () => {
                 try {
                     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${K_TOKEN_ADDR}`);
                     const data = await res.json();
                     const pair = data.pairs[0];
-                    market.change = parseFloat(pair.priceChange.h24);
-                    
+                    const change = parseFloat(pair.priceChange.h24);
                     document.getElementById('price-val').innerText = `$${parseFloat(pair.priceUsd).toFixed(6)}`;
-                    document.getElementById('price-chg').innerText = market.change + "%";
-
-                    if(market.change > 2) {
-                        market.state = "bullish";
-                        document.body.className = "bullish";
-                        document.getElementById('world-state').innerText = "☀️ Bullish: Yield x2";
-                    } else if(market.change < -2) {
-                        market.state = "bearish";
-                        document.body.className = "bearish";
-                        document.getElementById('world-state').innerText = "⛈️ Bearish: FUD Attack!";
-                    } else {
-                        market.state = "neutral";
-                        document.body.className = "";
-                        document.getElementById('world-state').innerText = "☁️ Neutral";
-                    }
-                } catch (e) { console.log("Oracle error"); }
+                    market.state = change > 2 ? "bullish" : (change < -2 ? "bearish" : "neutral");
+                    document.body.className = market.state;
+                } catch(e) {}
             };
-            updatePrice();
-            setInterval(updatePrice, 15000); // 15 sec update
+            fetchPrice(); setInterval(fetchPrice, 15000);
         }
 
-        function startGameLoop() {
-            setInterval(() => {
-                if(market.state === "bearish") {
-                    let damage = Math.max(1, 5 - (player.def / 5));
-                    player.hp -= damage;
-                    playSound(150, 'sawtooth', 0.2);
-                    addLog(`Monster attacked! -${damage.toFixed(1)} HP`);
-                    if(player.hp <= 0) {
-                        player.hp = 50;
-                        if(player.lvl > 1) { 
-                            player.lvl--; 
-                            addLog("💀 Guardian พ่ายแพ้! เลเวลลดลงเหลือ " + player.lvl);
-                        }
-                    }
-                    updateUI();
-                    save();
-                }
-                checkDailyReward();
-            }, 10000);
-        }
-
-        // --- Game Actions ---
-        function harvest() {
-            let gain = 1 * (market.state === "bullish" ? 2 : 1);
-            player.energy += gain;
-            playSound(market.state === "bullish" ? 880 : 440, 'sine', 0.05);
-            updateUI();
+        function gameTick() {
+            if(market.state === "bearish") {
+                player.hp -= 2;
+                if(player.hp <= 0) { player.hp = 50; if(player.lvl > 1) player.lvl--; }
+                updateUI();
+            }
+            checkDaily();
             save();
         }
 
-        function upgrade() {
-            let cost = 50 * player.lvl;
-            if(player.energy >= cost) {
-                player.energy -= cost;
-                player.lvl++;
-                player.pwr += 5;
-                player.def += 3;
-                playSound(1200, 'square', 0.4);
-                addLog(`✨ EVOLVED: เลเวลเพิ่มเป็น ${player.lvl}`);
-                updateUI();
-                save();
-            } else alert("คุณต้องการ " + cost + " Energy สำหรับเลเวลถัดไป");
-        }
-
-        function heal() {
-            if(player.energy >= 10 && player.hp < 100) {
-                player.energy -= 10;
-                player.hp = Math.min(100, player.hp + 20);
-                playSound(600, 'sine', 0.3);
-                addLog("❤️ ฟื้นฟู HP +20");
-                updateUI();
-                save();
-            }
-        }
-
-        // --- K-Balance System (Off-chain) ---
+        // --- Wallet Logic ---
         function openDeposit() { document.getElementById('deposit-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('deposit-modal').classList.add('hidden'); }
-        function copyAddr() {
-            navigator.clipboard.writeText(ADMIN_WALLET);
-            alert("Copy Address สำเร็จ!");
-        }
 
         function submitDeposit() {
             const amt = document.getElementById('dep-amount').value;
             const tx = document.getElementById('dep-tx').value;
-            if(!amt || tx.length < 10) return alert("กรุณากรอกจำนวนและ Transaction Hash ให้ถูกต้อง");
+            if(!amt || !tx) return alert("กรุณากรอกข้อมูล");
+
+            const req = { id: Date.now(), addr: player.addr, type: 'DEPOSIT', amount: parseFloat(amt), tx: tx, status: 'PENDING' };
             
-            player.history.unshift({ type: 'ฝาก (รอตรวจสอบ)', amount: amt, date: new Date().toLocaleDateString() });
-            addLog(`📩 แจ้งฝาก ${amt} K เรียบร้อย (Tx: ${tx.substring(0,8)}...)`);
+            // Save to User History
+            player.history.unshift(req);
+            
+            // Save to Global Admin Queue (Simulation)
+            let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
+            queue.push(req);
+            localStorage.setItem('admin_queue', JSON.stringify(queue));
+
+            addLog("แจ้งฝากเรียบร้อย รอยืนยัน...");
             closeModal();
             updateUI();
             save();
         }
 
         function withdraw() {
-            const amt = prompt("ใส่จำนวน K ที่ต้องการถอน (K-Balance ในเกมจะถูกหักทันที):");
-            const amtNum = parseFloat(amt);
-            if(amtNum && amtNum > 0 && amtNum <= player.kBalance) {
-                player.kBalance -= amtNum;
-                player.history.unshift({ type: 'ถอน (รอดำเนินการ)', amount: amtNum, date: new Date().toLocaleDateString() });
-                addLog(`📤 สั่งถอน ${amtNum} K สำเร็จ แอดมินจะโอนให้ตามคิว`);
+            const amt = prompt("จำนวน K ที่จะถอน:");
+            if(amt && parseFloat(amt) <= player.kBalance) {
+                player.kBalance -= parseFloat(amt);
+                const req = { id: Date.now(), addr: player.addr, type: 'WITHDRAW', amount: parseFloat(amt), status: 'PENDING' };
+                player.history.unshift(req);
+                
+                let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
+                queue.push(req);
+                localStorage.setItem('admin_queue', JSON.stringify(queue));
+                
                 updateUI();
                 save();
-            } else {
-                alert("ยอดเงินไม่พอ หรือระบุจำนวนไม่ถูกต้อง");
+            }
+        }
+
+        // --- Admin Controls ---
+        function renderAdminPanel() {
+            if(player.addr !== ADMIN_ADDR) return;
+            const adminBox = document.getElementById('admin-requests');
+            let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
+            
+            if(queue.length === 0) {
+                adminBox.innerHTML = '<p style="color:#555; text-align:center;">No pending requests</p>';
+                return;
+            }
+
+            adminBox.innerHTML = queue.map(req => `
+                <div class="req-card">
+                    <b style="color:var(--admin-color)">${req.type}</b> from ${req.addr.substring(0,6)}...<br>
+                    Amount: ${req.amount} K | Tx: ${req.tx || 'N/A'}<br>
+                    ${req.type === 'DEPOSIT' ? 
+                        `<button class="req-btn" onclick="approveDeposit(${req.id})">APPROVE</button>` :
+                        `<button class="req-btn" style="background:#4d94ff" onclick="approveWithdraw(${req.id})">CONFIRM TX & SEND</button>`
+                    }
+                    <button class="req-btn" style="background:var(--danger)" onclick="rejectReq(${req.id})">REJECT</button>
+                </div>
+            `).join('');
+        }
+
+        function approveDeposit(id) {
+            let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
+            const reqIdx = queue.findIndex(r => r.id === id);
+            if(reqIdx > -1) {
+                const req = queue[reqIdx];
+                // Update Target Player Balance
+                const targetKey = 'kiwi_p3_db_' + req.addr;
+                let targetData = JSON.parse(localStorage.getItem(targetKey));
+                if(targetData) {
+                    targetData.kBalance += req.amount;
+                    targetData.history.forEach(h => { if(h.id === id) h.status = 'SUCCESS'; });
+                    localStorage.setItem(targetKey, JSON.stringify(targetData));
+                }
+                queue.splice(reqIdx, 1);
+                localStorage.setItem('admin_queue', JSON.stringify(queue));
+                renderAdminPanel();
+                alert("อนุมัติยอดฝากเรียบร้อย!");
+            }
+        }
+
+        function approveWithdraw(id) {
+            const tx = prompt("ใส่ Transaction Hash ที่โอนให้ลูกค้าแล้ว:");
+            if(!tx) return;
+            let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
+            const reqIdx = queue.findIndex(r => r.id === id);
+            if(reqIdx > -1) {
+                const req = queue[reqIdx];
+                const targetKey = 'kiwi_p3_db_' + req.addr;
+                let targetData = JSON.parse(localStorage.getItem(targetKey));
+                if(targetData) {
+                    targetData.history.forEach(h => { if(h.id === id) { h.status = 'SUCCESS'; h.tx = tx; } });
+                    localStorage.setItem(targetKey, JSON.stringify(targetData));
+                }
+                queue.splice(reqIdx, 1);
+                localStorage.setItem('admin_queue', JSON.stringify(queue));
+                renderAdminPanel();
+            }
+        }
+
+        // --- Standard Actions ---
+        function harvest() {
+            let gain = market.state === "bullish" ? 2 : 1;
+            player.energy += gain;
+            playSound(440, 0.1);
+            updateUI();
+        }
+
+        function upgrade() {
+            let cost = 50 * player.lvl;
+            if(player.energy >= cost) {
+                player.energy -= cost; player.lvl++;
+                addLog("เลเวลอัพ! ขีดจำกัดพลังเพิ่มขึ้น");
+                updateUI(); save();
             }
         }
 
         function buySuperShield() {
             if(player.kBalance >= 10) {
-                player.kBalance -= 10;
-                player.def += 10;
-                player.hp = 100;
-                addLog("🛡️ ไอเทม Super Shield ทำงาน! (Def+10)");
-                playSound(900, 'sine', 0.8);
-                updateUI();
-                save();
-            } else alert("ยอดเงิน K-Balance ในเกมไม่พอ (ต้องการ 10 K)");
-        }
-
-        // --- Rewards Logic ---
-        function checkDailyReward() {
-            const now = Date.now();
-            const btn = document.getElementById('claim-btn');
-            const oneDay = 86400000; 
-
-            if(now - player.lastClaim > oneDay && player.lvl >= 5) {
-                btn.classList.remove('hidden');
-            } else {
-                btn.classList.add('hidden');
+                player.kBalance -= 10; player.def += 10; player.hp = 100;
+                addLog("Super Shield เปิดใช้งาน!");
+                updateUI(); save();
             }
         }
 
-        function claimDaily() {
-            let reward = 0;
-            if(player.lvl >= 10) reward = 100;
-            else if(player.lvl >= 5) reward = 50;
-
-            player.kBalance += reward;
-            player.lastClaim = Date.now();
-            addLog(`🎁 รับรางวัลรายวัน: +${reward} K (LVL ${player.lvl})`);
-            playSound(1500, 'sine', 0.5);
-            updateUI();
-            save();
+        function checkDaily() {
+            const btn = document.getElementById('claim-btn');
+            if(Date.now() - player.lastClaim > 86400000 && player.lvl >= 5) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
         }
 
-        // --- UI & Helper ---
-        function addLog(msg) {
-            const log = document.getElementById('game-log');
-            log.innerHTML = `<div class="log-entry"><b>${new Date().toLocaleTimeString()}</b>: ${msg}</div>` + log.innerHTML;
+        function claimDaily() {
+            let r = player.lvl >= 10 ? 100 : 50;
+            player.kBalance += r; player.lastClaim = Date.now();
+            addLog(`รับรางวัลรายวัน +${r} K`);
+            updateUI(); save();
+        }
+
+        // --- Helpers ---
+        function addLog(m) {
+            const box = document.getElementById('game-log');
+            box.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${m}</div>` + box.innerHTML;
         }
 
         function updateUI() {
             document.getElementById('energy-val').innerText = player.energy.toFixed(2);
             document.getElementById('k-balance').innerText = player.kBalance.toFixed(2) + " K";
+            document.getElementById('bird-lvl').innerText = "LVL: " + player.lvl;
             document.getElementById('hp-fill').style.width = player.hp + "%";
             document.getElementById('hp-text').innerText = `HP: ${Math.floor(player.hp)}/100`;
-            document.getElementById('bird-lvl').innerText = `LVL: ${player.lvl}`;
-            document.getElementById('stat-power').innerText = player.pwr;
-            document.getElementById('stat-def').innerText = player.def;
-
-            const hList = document.getElementById('history-list');
-            hList.innerHTML = player.history.slice(0, 6).map(h => 
-                `<tr><td>${h.date}</td><td>${h.type}</td><td style="color:var(--accent)">${h.amount}</td></tr>`
-            ).join('');
-
-            document.getElementById('monster-alert').className = (market.state === "bearish") ? "monster-warning" : "hidden";
+            
+            const histBox = document.getElementById('user-history');
+            histBox.innerHTML = player.history.map(h => `
+                <div style="border-bottom:1px solid #222; padding:5px; font-size:0.7rem;">
+                    <b>${h.type}</b>: ${h.amount} K <br>
+                    Status: <span style="color:${h.status === 'SUCCESS' ? 'var(--accent)' : '#ff9f43'}">${h.status}</span>
+                </div>
+            `).join('');
         }
 
-        function save() {
-            localStorage.setItem('kiwi_p3_v2_' + player.addr, JSON.stringify(player));
-        }
+        function save() { localStorage.setItem('kiwi_p3_db_' + player.addr, JSON.stringify(player)); }
     </script>
 </body>
 </html>
