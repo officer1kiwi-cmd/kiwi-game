@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiwi Prophet - Admin & Evolution</title>
+    <title>Kiwi Prophet - Admin Dashboard Fixed</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -37,7 +37,6 @@
             font-weight: bold; cursor: pointer; transition: 0.2s;
         }
         .btn-harvest { background: var(--accent); color: #000; font-size: 1.2rem; height: 70px; }
-        .btn-upgrade { background: #ffd700; color: #000; }
 
         .wallet-card { background: linear-gradient(45deg, #111, #222); padding: 15px; border-radius: 15px; border: 1px solid var(--accent); margin-bottom: 15px; }
 
@@ -94,7 +93,6 @@
                         <button onclick="withdraw()" style="flex:1; cursor:pointer;">WITHDRAW</button>
                     </div>
                 </div>
-
                 <h3>GUARDIAN <span id="admin-tag" class="admin-badge hidden">ADMIN</span></h3>
                 <div style="text-align: center;">
                     <div class="bird-emoji" style="font-size: 5rem;">🐦</div>
@@ -104,7 +102,6 @@
                     <div id="hp-fill" style="background:var(--accent); height:100%; width:100%;"></div>
                 </div>
                 <p id="hp-text" style="font-size: 0.8rem; text-align:center;">HP: 100/100</p>
-                
                 <button class="btn-action btn-upgrade" onclick="upgrade()">UPGRADE (50 Energy)</button>
                 <button class="btn-action btn-claim hidden" id="claim-btn" style="background:#ff00ff; color:#fff" onclick="claimDaily()">🎁 CLAIM DAILY</button>
             </div>
@@ -114,7 +111,6 @@
                 <p style="color: #666; font-weight: bold; margin-bottom: 2rem;">K-ENERGY</p>
                 <button class="btn-action btn-harvest" onclick="harvest()">HARVEST</button>
                 <button class="btn-action btn-heal" style="background:#4d94ff; color:#fff" onclick="heal()">HEAL (10 Energy)</button>
-                
                 <div style="margin-top: 2rem; border-top: 1px solid #333; padding-top: 1.5rem;">
                     <h3>K-SHOP</h3>
                     <button class="btn-action" style="background:#fff; color:#000" onclick="buySuperShield()">SUPER SHIELD (10 K)</button>
@@ -128,7 +124,6 @@
                         <p style="color:#555; text-align:center;">No pending requests</p>
                     </div>
                 </div>
-
                 <div id="user-section">
                     <h3>WORLD LOG</h3>
                     <div class="log-box" id="game-log"></div>
@@ -146,7 +141,6 @@
         let player = { addr: "", pass: "", energy: 0, hp: 100, lvl: 1, pwr: 10, def: 5, kBalance: 0, lastClaim: 0, history: [] };
         let market = { state: "neutral" };
         
-        // --- Core Audio ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq, duration) {
             const osc = audioCtx.createOscillator();
@@ -170,6 +164,7 @@
             } else {
                 player.addr = addrInput;
                 player.pass = passInput;
+                save();
             }
 
             document.getElementById('auth-overlay').classList.add('hidden');
@@ -182,7 +177,7 @@
 
             updateUI();
             startPriceOracle();
-            setInterval(gameTick, 10000);
+            setInterval(gameTick, 5000); // Check every 5 sec for UI Sync
             renderAdminPanel();
         }
 
@@ -202,16 +197,24 @@
         }
 
         function gameTick() {
+            // Re-sync player data from storage in case Admin updated it
+            const freshData = localStorage.getItem('kiwi_p3_db_' + player.addr);
+            if(freshData) {
+                const parsed = JSON.parse(freshData);
+                player.kBalance = parsed.kBalance;
+                player.history = parsed.history;
+            }
+            
             if(market.state === "bearish") {
-                player.hp -= 2;
+                player.hp -= 1;
                 if(player.hp <= 0) { player.hp = 50; if(player.lvl > 1) player.lvl--; }
-                updateUI();
             }
             checkDaily();
+            updateUI();
             save();
+            if(player.addr === ADMIN_ADDR) renderAdminPanel();
         }
 
-        // --- Wallet Logic ---
         function openDeposit() { document.getElementById('deposit-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('deposit-modal').classList.add('hidden'); }
 
@@ -220,39 +223,41 @@
             const tx = document.getElementById('dep-tx').value;
             if(!amt || !tx) return alert("กรุณากรอกข้อมูล");
 
-            const req = { id: Date.now(), addr: player.addr, type: 'DEPOSIT', amount: parseFloat(amt), tx: tx, status: 'PENDING' };
+            const req = { id: Date.now(), addr: player.addr, type: 'DEPOSIT', amount: parseFloat(amt), tx: tx, status: 'PENDING', date: new Date().toLocaleDateString() };
             
-            // Save to User History
             player.history.unshift(req);
             
-            // Save to Global Admin Queue (Simulation)
             let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
             queue.push(req);
             localStorage.setItem('admin_queue', JSON.stringify(queue));
 
             addLog("แจ้งฝากเรียบร้อย รอยืนยัน...");
             closeModal();
-            updateUI();
             save();
+            updateUI();
         }
 
         function withdraw() {
-            const amt = prompt("จำนวน K ที่จะถอน:");
-            if(amt && parseFloat(amt) <= player.kBalance) {
-                player.kBalance -= parseFloat(amt);
-                const req = { id: Date.now(), addr: player.addr, type: 'WITHDRAW', amount: parseFloat(amt), status: 'PENDING' };
+            const amt = prompt("จำนวน K ที่จะถอน (จะหักยอดทันที):");
+            const val = parseFloat(amt);
+            if(val && val > 0 && val <= player.kBalance) {
+                player.kBalance -= val;
+                const req = { id: Date.now(), addr: player.addr, type: 'WITHDRAW', amount: val, status: 'PENDING', date: new Date().toLocaleDateString() };
                 player.history.unshift(req);
                 
                 let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
                 queue.push(req);
                 localStorage.setItem('admin_queue', JSON.stringify(queue));
                 
-                updateUI();
+                addLog(`สั่งถอน ${val} K เรียบร้อย`);
                 save();
+                updateUI();
+            } else {
+                alert("ยอดคงเหลือไม่พอ");
             }
         }
 
-        // --- Admin Controls ---
+        // --- ADMIN LOGIC FIXED ---
         function renderAdminPanel() {
             if(player.addr !== ADMIN_ADDR) return;
             const adminBox = document.getElementById('admin-requests');
@@ -265,57 +270,98 @@
 
             adminBox.innerHTML = queue.map(req => `
                 <div class="req-card">
-                    <b style="color:var(--admin-color)">${req.type}</b> from ${req.addr.substring(0,6)}...<br>
-                    Amount: ${req.amount} K | Tx: ${req.tx || 'N/A'}<br>
+                    <b style="color:var(--admin-color)">${req.type}</b> from ${req.addr.substring(0,8)}...<br>
+                    Amount: <b>${req.amount} K</b><br>
                     ${req.type === 'DEPOSIT' ? 
-                        `<button class="req-btn" onclick="approveDeposit(${req.id})">APPROVE</button>` :
-                        `<button class="req-btn" style="background:#4d94ff" onclick="approveWithdraw(${req.id})">CONFIRM TX & SEND</button>`
+                        `<button class="req-btn" onclick="approveDeposit(${req.id}, '${req.addr}')">APPROVE DEPOSIT</button>` :
+                        `<button class="req-btn" style="background:#4d94ff" onclick="approveWithdraw(${req.id}, '${req.addr}')">CONFIRM & SEND TX</button>`
                     }
-                    <button class="req-btn" style="background:var(--danger)" onclick="rejectReq(${req.id})">REJECT</button>
+                    <button class="req-btn" style="background:var(--danger)" onclick="rejectReq(${req.id}, '${req.addr}')">REJECT</button>
                 </div>
             `).join('');
         }
 
-        function approveDeposit(id) {
+        function approveDeposit(reqId, userAddr) {
+            // 1. Update Global Queue
             let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
-            const reqIdx = queue.findIndex(r => r.id === id);
-            if(reqIdx > -1) {
-                const req = queue[reqIdx];
-                // Update Target Player Balance
-                const targetKey = 'kiwi_p3_db_' + req.addr;
-                let targetData = JSON.parse(localStorage.getItem(targetKey));
-                if(targetData) {
-                    targetData.kBalance += req.amount;
-                    targetData.history.forEach(h => { if(h.id === id) h.status = 'SUCCESS'; });
-                    localStorage.setItem(targetKey, JSON.stringify(targetData));
-                }
+            const reqIdx = queue.findIndex(r => r.id === reqId);
+            if(reqIdx === -1) return;
+            const req = queue[reqIdx];
+
+            // 2. Update Target User File
+            const userKey = 'kiwi_p3_db_' + userAddr;
+            let userData = JSON.parse(localStorage.getItem(userKey));
+            
+            if(userData) {
+                userData.kBalance += req.amount;
+                // Update history item in user file
+                userData.history.forEach(h => {
+                    if(h.id === reqId) h.status = 'SUCCESS';
+                });
+                localStorage.setItem(userKey, JSON.stringify(userData));
+                
+                // 3. Remove from Admin Queue
                 queue.splice(reqIdx, 1);
                 localStorage.setItem('admin_queue', JSON.stringify(queue));
+                
+                alert(`ยืนยันการฝากให้ ${userAddr.substring(0,6)} สำเร็จ!`);
                 renderAdminPanel();
-                alert("อนุมัติยอดฝากเรียบร้อย!");
+            } else {
+                alert("ไม่พบข้อมูลผู้เล่น!");
             }
         }
 
-        function approveWithdraw(id) {
-            const tx = prompt("ใส่ Transaction Hash ที่โอนให้ลูกค้าแล้ว:");
+        function approveWithdraw(reqId, userAddr) {
+            const tx = prompt("ใส่ Transaction Hash ที่โอนเงินจริงแล้ว:");
             if(!tx) return;
+
             let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
-            const reqIdx = queue.findIndex(r => r.id === id);
-            if(reqIdx > -1) {
-                const req = queue[reqIdx];
-                const targetKey = 'kiwi_p3_db_' + req.addr;
-                let targetData = JSON.parse(localStorage.getItem(targetKey));
-                if(targetData) {
-                    targetData.history.forEach(h => { if(h.id === id) { h.status = 'SUCCESS'; h.tx = tx; } });
-                    localStorage.setItem(targetKey, JSON.stringify(targetData));
-                }
+            const reqIdx = queue.findIndex(r => r.id === reqId);
+            if(reqIdx === -1) return;
+
+            const userKey = 'kiwi_p3_db_' + userAddr;
+            let userData = JSON.parse(localStorage.getItem(userKey));
+            
+            if(userData) {
+                userData.history.forEach(h => {
+                    if(h.id === reqId) {
+                        h.status = 'SUCCESS';
+                        h.tx = tx;
+                    }
+                });
+                localStorage.setItem(userKey, JSON.stringify(userData));
+                
                 queue.splice(reqIdx, 1);
                 localStorage.setItem('admin_queue', JSON.stringify(queue));
+                
+                alert("ยืนยันการถอนสำเร็จ!");
                 renderAdminPanel();
             }
         }
 
-        // --- Standard Actions ---
+        function rejectReq(reqId, userAddr) {
+            if(!confirm("ต้องการปฏิเสธรายการนี้?")) return;
+            let queue = JSON.parse(localStorage.getItem('admin_queue') || '[]');
+            const reqIdx = queue.findIndex(r => r.id === reqId);
+            const req = queue[reqIdx];
+
+            const userKey = 'kiwi_p3_db_' + userAddr;
+            let userData = JSON.parse(localStorage.getItem(userKey));
+            if(userData) {
+                // If it was a withdraw, refund the K balance
+                if(req.type === 'WITHDRAW') userData.kBalance += req.amount;
+                
+                userData.history.forEach(h => {
+                    if(h.id === reqId) h.status = 'REJECTED';
+                });
+                localStorage.setItem(userKey, JSON.stringify(userData));
+            }
+            queue.splice(reqIdx, 1);
+            localStorage.setItem('admin_queue', JSON.stringify(queue));
+            renderAdminPanel();
+        }
+
+        // --- Standard Logic ---
         function harvest() {
             let gain = market.state === "bullish" ? 2 : 1;
             player.energy += gain;
@@ -327,7 +373,7 @@
             let cost = 50 * player.lvl;
             if(player.energy >= cost) {
                 player.energy -= cost; player.lvl++;
-                addLog("เลเวลอัพ! ขีดจำกัดพลังเพิ่มขึ้น");
+                addLog("เลเวลอัพ!");
                 updateUI(); save();
             }
         }
@@ -335,7 +381,7 @@
         function buySuperShield() {
             if(player.kBalance >= 10) {
                 player.kBalance -= 10; player.def += 10; player.hp = 100;
-                addLog("Super Shield เปิดใช้งาน!");
+                addLog("Super Shield Activated!");
                 updateUI(); save();
             }
         }
@@ -349,11 +395,9 @@
         function claimDaily() {
             let r = player.lvl >= 10 ? 100 : 50;
             player.kBalance += r; player.lastClaim = Date.now();
-            addLog(`รับรางวัลรายวัน +${r} K`);
             updateUI(); save();
         }
 
-        // --- Helpers ---
         function addLog(m) {
             const box = document.getElementById('game-log');
             box.innerHTML = `<div>[${new Date().toLocaleTimeString()}] ${m}</div>` + box.innerHTML;
@@ -370,7 +414,7 @@
             histBox.innerHTML = player.history.map(h => `
                 <div style="border-bottom:1px solid #222; padding:5px; font-size:0.7rem;">
                     <b>${h.type}</b>: ${h.amount} K <br>
-                    Status: <span style="color:${h.status === 'SUCCESS' ? 'var(--accent)' : '#ff9f43'}">${h.status}</span>
+                    Status: <span style="color:${h.status === 'SUCCESS' ? 'var(--accent)' : (h.status === 'REJECTED' ? 'var(--danger)' : '#ff9f43')}">${h.status}</span>
                 </div>
             `).join('');
         }
